@@ -150,5 +150,9 @@ ENV ARCHIVE_TYPE=file \
     REDIS_URL=redis://redis:6379/0 \
     INGESTORS_CONVERT_DOCUMENT_URL=http://convert-document:3000/convert
 
+RUN rm /usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata && \
+        curl -o "/usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata" \
+                https://github.com/tesseract-ocr/tessdata_best/raw/main/eng.traineddata
+
 # USER app
 CMD ingestors process

@@ -22,3 +22,11 @@ class ImageIngestorTest(TestCase):
 
         # self.assert(u'Testing ingestors', result.pages[0]['text'])
         self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)
+
+    # def test_fashdb_img1(self):
+    #     fixture_path, entity = self.fixture("The Silver Guild -00014.png")
+    #     self.manager.ingest(fixture_path, entity)
+    #
+    #     body_text = entity.get("bodyText")
+    #
+    #     self.assertEqual(entity.first("processingStatus"), self.manager.STATUS_SUCCESS)

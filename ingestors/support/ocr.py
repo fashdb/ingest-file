@@ -10,6 +10,8 @@ from languagecodes import list_to_alpha3 as alpha3
 from ingestors import settings
 from ingestors.support.cache import CacheSupport
 from ingestors.util import temp_locale
+import cv2
+import numpy
 
 log = logging.getLogger(__name__)
 TESSERACT_LOCALE = "C"
@@ -94,9 +96,20 @@ class LocalOCRService(object):
             languages = self.language_list(languages)
             api = self.configure_engine(languages)
             try:
-                # TODO: play with contrast and sharpening the images.
+                im = numpy.array(image)
+
+                # Convert to grayscale
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+                # Invert colors if background is dark
+                if cv2.mean(im)[0] > 127:
+                    im = ~im
+
+                # Resize image
+                im = cv2.resize(im, (im.shape[1] * 2, im.shape[0] * 2), interpolation=cv2.INTER_CUBIC)
+
                 start_time = time.time()
-                api.SetImage(image)
+                api.SetImage(Image.fromarray(im))
                 text = api.GetUTF8Text()
                 confidence = api.MeanTextConf()
                 end_time = time.time()
