@@ -29,10 +29,10 @@ class OCRSupport(CacheSupport):
         languages = sorted(set(languages or []))
         data_key = sha1(data).hexdigest()
         key = self.cache_key("ocr", data_key, *languages)
-        text = self.tags.get(key)
-        if text is not None:
-            log.info("OCR: %s chars cached", len(text))
-            return stringify(text)
+        # text = self.tags.get(key)
+        # if text is not None:
+        #     log.info("OCR: %s chars cached", len(text))
+        #     return stringify(text)
 
         if not hasattr(settings, "_ocr_service"):
             if settings.OCR_VISION_API:

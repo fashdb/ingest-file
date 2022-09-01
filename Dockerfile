@@ -9,6 +9,7 @@ LABEL org.opencontainers.image.source https://github.com/alephdata/ingest-file
 # RUN echo "deb http://http.us.debian.org/debian stretch non-free" >/etc/apt/sources.list.d/nonfree.list
 RUN apt-get -qq -y update \
     && apt-get -qq -y install build-essential locales ca-certificates \
+    ffmpeg libsm6 libxext6  \
     # python deps (mostly to install their dependencies)
     python3-pip python3-dev python3-pil \
     # tesseract
@@ -152,7 +153,7 @@ ENV ARCHIVE_TYPE=file \
 
 RUN rm /usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata && \
         curl -o "/usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata" \
-                https://github.com/tesseract-ocr/tessdata_best/raw/main/eng.traineddata
+          "https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/main/eng.traineddata"
 
 # USER app
 CMD ingestors process
