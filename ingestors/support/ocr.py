@@ -3,18 +3,29 @@ import logging
 import threading
 from hashlib import sha1
 from normality import stringify
-from PIL import Image
+from PIL import Image, ImageOps, ImageStat
 from io import BytesIO
 from languagecodes import list_to_alpha3 as alpha3
 
 from ingestors import settings
 from ingestors.support.cache import CacheSupport
 from ingestors.util import temp_locale
-import cv2
-import numpy
+import numpy as np
 
 log = logging.getLogger(__name__)
 TESSERACT_LOCALE = "C"
+
+
+def optimal_resize(img, median_height):
+
+    target_height = 32
+    scale_factor = target_height / median_height
+
+    skip_percentage = 0.07
+    if 1 - skip_percentage < scale_factor < 1 + skip_percentage:
+        return img
+
+    return img.resize((round(img.width * scale_factor), round(img.height * scale_factor)), Image.ANTIALIAS)
 
 
 class OCRSupport(CacheSupport):
@@ -96,20 +107,21 @@ class LocalOCRService(object):
             languages = self.language_list(languages)
             api = self.configure_engine(languages)
             try:
-                im = numpy.array(image)
-
-                # Convert to grayscale
-                im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-
-                # Invert colors if background is dark
-                if cv2.mean(im)[0] > 127:
-                    im = ~im
-
-                # Resize image
-                im = cv2.resize(im, (im.shape[1] * 2, im.shape[0] * 2), interpolation=cv2.INTER_CUBIC)
-
                 start_time = time.time()
-                api.SetImage(Image.fromarray(im))
+
+                image = ImageOps.grayscale(image)
+                if ImageStat.Stat(image).mean[0] < 127:
+                    image = ImageOps.invert(image)
+
+                api.SetImage(image)
+                api.Recognize()
+                strips = api.GetStrips()
+                mean_height = np.mean([strip["h"] for _, strip, i in strips if strip["h"] != image.height])
+
+                image = optimal_resize(image, mean_height)
+
+                api = self.configure_engine(languages)
+                api.SetImage(image)
                 text = api.GetUTF8Text()
                 confidence = api.MeanTextConf()
                 end_time = time.time()
